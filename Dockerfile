@@ -1,6 +1,7 @@
 
 # Stage 1: Build the frontend
 FROM node:24-alpine AS builder
+RUN apk upgrade --no-cache libxslt zlib
 
 WORKDIR /app
 
@@ -12,6 +13,8 @@ RUN npm run build
 
 # Stage 2: Serve the frontend with Nginx
 FROM nginx:stable-alpine
+
+RUN apk upgrade --no-cache libxslt zlib
 
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
