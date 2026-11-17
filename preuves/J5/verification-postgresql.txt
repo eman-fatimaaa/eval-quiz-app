@@ -1,0 +1,17 @@
+J5 - PostgreSQL cloud (Neon)
+Base : neondb
+Fournisseur : Neon
+Schema : users, quiz_results, answers
+
+=== Reference du secret Azure ===
+Name          Secret
+------------  ------------
+DATABASE_URL  database-url
+
+=== Test de sante ===
+HTTP 200
+
+=== Resultat du test PostgreSQL ===
+Score : 17/20
+Reponses enregistrees : 20/20
+Verification effectuee dans Neon SQL Editor.
