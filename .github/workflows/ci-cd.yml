@@ -1,0 +1,161 @@
+name: Quiz App CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-scan:
+    name: Build and Trivy scan
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install and build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Validate backend
+        run: |
+          cd backend
+          npm ci --omit=dev
+          node --check server.js
+
+      - name: Build frontend Docker image
+        run: |
+          docker build \
+            -f Dockerfile.azure \
+            -t quiz-frontend:ci .
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            -f backend/Dockerfile \
+            -t quiz-backend:ci backend
+
+      - name: Trivy frontend - block CRITICAL
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: quiz-frontend:ci
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+
+      - name: Trivy backend - block CRITICAL
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: quiz-backend:ci
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-24.04
+    needs: build-and-scan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      RESOURCE_GROUP: rg-eval-quiz
+      REGISTRY_NAME: acremanquiz2026
+      REGISTRY_SERVER: acremanquiz2026.azurecr.io
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure using OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to Azure Container Registry
+        run: az acr login --name "$REGISTRY_NAME"
+
+      - name: Build deployment images
+        run: |
+          docker build --platform linux/amd64 \
+            -f Dockerfile.azure \
+            -t "$REGISTRY_SERVER/quiz-front-end:$IMAGE_TAG" .
+
+          docker build --platform linux/amd64 \
+            -f backend/Dockerfile \
+            -t "$REGISTRY_SERVER/quiz-backend:$IMAGE_TAG" backend
+
+      - name: Trivy frontend deployment scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: acremanquiz2026.azurecr.io/quiz-front-end:${{ github.sha }}
+          severity: CRITICAL
+          exit-code: '1'
+          format: table
+
+      - name: Trivy backend deployment scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: acremanquiz2026.azurecr.io/quiz-backend:${{ github.sha }}
+          severity: CRITICAL
+          exit-code: '1'
+          format: table
+
+      - name: Push images to ACR
+        run: |
+          docker push "$REGISTRY_SERVER/quiz-front-end:$IMAGE_TAG"
+          docker push "$REGISTRY_SERVER/quiz-backend:$IMAGE_TAG"
+
+      - name: Install Container Apps extension
+        run: |
+          az extension add \
+            --name containerapp \
+            --upgrade \
+            --allow-preview true
+
+      - name: Deploy backend
+        run: |
+          az containerapp update \
+            --name quiz-backend \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$REGISTRY_SERVER/quiz-backend:$IMAGE_TAG" \
+            --output none
+
+      - name: Deploy frontend
+        run: |
+          BACKEND_FQDN=$(az containerapp show \
+            --name quiz-backend \
+            --resource-group "$RESOURCE_GROUP" \
+            --query properties.configuration.ingress.fqdn -o tsv)
+
+          test -n "$BACKEND_FQDN"
+
+          az containerapp update \
+            --name quiz-front-end \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$REGISTRY_SERVER/quiz-front-end:$IMAGE_TAG" \
+            --set-env-vars "BACKEND_FQDN=$BACKEND_FQDN" \
+            --output none
+
+      - name: Verify application health
+        run: |
+          FRONTEND_FQDN=$(az containerapp show \
+            --name quiz-front-end \
+            --resource-group "$RESOURCE_GROUP" \
+            --query properties.configuration.ingress.fqdn -o tsv)
+
+          curl --fail --show-error --silent \
+            --retry 10 --retry-delay 5 \
+            "https://$FRONTEND_FQDN/health"
