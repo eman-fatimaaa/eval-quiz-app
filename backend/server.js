@@ -55,9 +55,13 @@ const pool = new pg.Pool({
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Admin config
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "eman2003";
-const JWT_SECRET = process.env.JWT_SECRET || "b139b0226fe4369d05bddffa81c3680829b425d7af3f4d60";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !JWT_SECRET) {
+  throw new Error("Missing required admin environment variables");
+}
+
 const FROM_EMAIL =
   process.env.FROM_EMAIL || "Quiz App <noreply@notifications.labformation.fr>";
 
