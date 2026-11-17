@@ -1,0 +1,17 @@
+J3 - Azure Container Registry
+Name          Location
+------------  -------------
+rg-eval-quiz  francecentral
+Name             SKU    Server
+---------------  -----  --------------------------
+acremanquiz2026  Basic  acremanquiz2026.azurecr.io
+Result
+--------------
+quiz-backend
+quiz-front-end
+Result
+--------
+j2
+Result
+--------
+j2
