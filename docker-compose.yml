@@ -1,0 +1,60 @@
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quiz-front-end:j1
+    ports:
+      - "127.0.0.1:8087:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - quiz_network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: quiz-backend:j1
+    environment:
+      PORT: "3007"
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      JWT_SECRET: "${JWT_SECRET}"
+      RESEND_API_KEY: "${RESEND_API_KEY}"
+      FROM_EMAIL: "${FROM_EMAIL}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - quiz_network
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - quiz_network
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+networks:
+  quiz_network:
+    driver: bridge

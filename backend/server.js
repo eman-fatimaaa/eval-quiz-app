@@ -56,8 +56,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Admin config
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
-const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "eman2003";
+const JWT_SECRET = process.env.JWT_SECRET || "b139b0226fe4369d05bddffa81c3680829b425d7af3f4d60";
 const FROM_EMAIL =
   process.env.FROM_EMAIL || "Quiz App <noreply@notifications.labformation.fr>";
 
