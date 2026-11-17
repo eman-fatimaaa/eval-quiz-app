@@ -1,0 +1,58 @@
+name: Quiz App CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-scan:
+    name: Build and Trivy scan
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install and build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Validate backend
+        run: |
+          cd backend
+          npm ci --omit=dev
+          node --check server.js
+
+      - name: Build frontend Docker image
+        run: |
+          docker build \
+            -f Dockerfile.azure \
+            -t quiz-frontend:ci .
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            -f backend/Dockerfile \
+            -t quiz-backend:ci backend
+
+      - name: Trivy frontend - block CRITICAL
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: quiz-frontend:ci
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+
+      - name: Trivy backend - block CRITICAL
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: quiz-backend:ci
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
