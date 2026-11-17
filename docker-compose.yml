@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: quiz-front-end:j1
+    image: quiz-front-end:j2
     ports:
       - "127.0.0.1:8087:80"
     depends_on:
@@ -18,7 +18,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: quiz-backend:j1
+    image: quiz-backend:j2
     environment:
       PORT: "3007"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
