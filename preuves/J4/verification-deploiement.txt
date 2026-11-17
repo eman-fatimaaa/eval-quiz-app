@@ -1,0 +1,52 @@
+J4 - Déploiement Azure Container Apps
+Date: Tue Nov 17 22:37:13 CET 2026
+
+=== Configuration : quiz-front-end ===
+Name            State      Image                                              External    Port    FQDN
+--------------  ---------  -------------------------------------------------  ----------  ------  --------------------------------------------------------------------------
+quiz-front-end  Succeeded  acremanquiz2026.azurecr.io/quiz-front-end:j4-fix2  True        80      quiz-front-end.agreeablecoast-d1830518.francecentral.azurecontainerapps.io
+=== Révisions : quiz-front-end ===
+Name                    Health    Running
+----------------------  --------  ---------
+quiz-front-end--latest  Healthy   Running
+
+=== Configuration : quiz-backend ===
+Name          State      Image                                       External    Port    FQDN
+------------  ---------  ------------------------------------------  ----------  ------  ------------------------------------------------------------------------
+quiz-backend  Succeeded  acremanquiz2026.azurecr.io/quiz-backend:j2  True        3007    quiz-backend.agreeablecoast-d1830518.francecentral.azurecontainerapps.io
+=== Révisions : quiz-backend ===
+Name                  Health    Running
+--------------------  --------  ---------
+quiz-backend--latest  Healthy   Running
+
+=== Frontend homepage ===
+HTTP 200
+=== Backend health via frontend ===
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+date: Tue, 17 Nov 2026 21:37:20 GMT
+server: nginx/1.30.6
+access-control-allow-origin: *
+etag: W/"f-VaSQ4oDUiZblZNAEkkN+sX+q3Sg"
+content-length: 15
+x-powered-by: Express
+ratelimit-policy: 100;w=900
+ratelimit-limit: 100
+ratelimit-remaining: 97
+ratelimit-reset: 777
+
+{"status":"ok"}
+=== Backend health direct ===
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+date: Tue, 17 Nov 2026 21:37:20 GMT
+access-control-allow-origin: *
+etag: W/"f-VaSQ4oDUiZblZNAEkkN+sX+q3Sg"
+content-length: 15
+x-powered-by: Express
+ratelimit-policy: 100;w=900
+ratelimit-limit: 100
+ratelimit-remaining: 96
+ratelimit-reset: 777
+
+{"status":"ok"}
