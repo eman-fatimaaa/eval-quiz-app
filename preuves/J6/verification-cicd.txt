@@ -1,0 +1,24 @@
+J6 - Validation CI/CD
+Date : Tue Nov 17 23:48:42 CET 2026
+
+=== Images deployees ===
+quiz-front-end:
+acremanquiz2026.azurecr.io/quiz-front-end:5f741fc8d04f86ceabaf5f6fac7497235a07b842
+quiz-backend:
+acremanquiz2026.azurecr.io/quiz-backend:5f741fc8d04f86ceabaf5f6fac7497235a07b842
+
+=== Health check ===
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+date: Tue, 17 Nov 2026 22:48:48 GMT
+server: nginx/1.30.6
+access-control-allow-origin: *
+etag: W/"f-VaSQ4oDUiZblZNAEkkN+sX+q3Sg"
+content-length: 15
+x-powered-by: Express
+ratelimit-policy: 100;w=900
+ratelimit-limit: 100
+ratelimit-remaining: 98
+ratelimit-reset: 782
+
+{"status":"ok"}
